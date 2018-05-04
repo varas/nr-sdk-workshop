@@ -23,10 +23,10 @@ const (
 
 var (
 	args argumentList
-	//endpointA = "http://localhost:8081/health"
-	//endpointB = "http://localhost:8082/health"
-	endpointA = "http://www.mocky.io/v2/5aec67303200006700fa48fb"
-	endpointB = "http://www.mocky.io/v2/5aec674b3200004a00fa48fc"
+	endpointA = "http://192.168.100.200:8081/health"
+	endpointB = "http://192.168.100.200:8082/health"
+	//endpointA = "http://www.mocky.io/v2/5aec67303200006700fa48fb"
+	//endpointB = "http://www.mocky.io/v2/5aec674b3200004a00fa48fc"
 )
 
 type serverStatus struct {
