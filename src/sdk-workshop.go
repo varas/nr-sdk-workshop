@@ -2,9 +2,9 @@ package main
 
 import (
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/infra-integrations-sdk/metric"
-	"github.com/newrelic/infra-integrations-sdk/sdk"
+	"github.com/newrelic/infra-integrations-sdk/data/event"
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 )
 
 type argumentList struct {
@@ -16,39 +16,83 @@ const (
 	integrationVersion = "0.1.0"
 )
 
-var args argumentList
+var (
+	args argumentList
+	endpointA = "http://localhost:8881"
+	endpointB = "http://localhost:8882"
+)
 
-func populateInventory(inventory sdk.Inventory) error {
-	// Insert here the logic of your integration to get the inventory data
-	// Ex: inventory.SetItem("softwareVersion", "value", "1.0.1")
-	// --
-	return nil
-}
-
-func populateMetrics(ms *metric.MetricSet) error {
-	// Insert here the logic of your integration to get the metrics data
-	// Ex: ms.SetMetric("requestsPerSecond", 10, metric.GAUGE)
-	// --
-	return nil
+type serverStatus struct {
+	statusCode int
+	apiVersion string
+	latencyMs int
+	error string
 }
 
 func main() {
-	integration, err := sdk.NewIntegration(integrationName, integrationVersion, &args)
-	fatalIfErr(err)
+	// Initialize integration
+	i, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
+	panicOnErr(err)
 
-	if args.All || args.Inventory {
-		fatalIfErr(populateInventory(integration.Inventory))
+	// Create entities (name must be unique)
+	a, err := i.Entity("instance-a", "web-server")
+	panicOnErr(err)
+	b, err := i.Entity("instance-b", "web-server")
+	panicOnErr(err)
+
+	// Fetch data (populate entities)
+	err = monitorizeWebServer(a, endpointA)
+	if err != nil {
+		i.Logger().Errorf("cannot fetch data for endpoint: %s", endpointA)
+	}
+	err = monitorizeWebServer(b, endpointB)
+	if err != nil {
+		i.Logger().Errorf("cannot fetch data for endpoint: %s", endpointB)
 	}
 
-	if args.All || args.Metrics {
-		ms := integration.NewMetricSet("Sdk-WorkshopSample")
-		fatalIfErr(populateMetrics(ms))
-	}
-	fatalIfErr(integration.Publish())
+	// Push to New Relic
+	panicOnErr(i.Publish())
 }
 
-func fatalIfErr(err error) {
+func monitorizeWebServer(e *integration.Entity, endpoint string) error {
+	s := queryServer(endpoint)
+
+	// Add Inventory
+	e.SetInventoryItem("api", "version", s.apiVersion)
+
+	// Add Metrics
+	set, err := e.NewMetricSet("status")
 	if err != nil {
-		log.Fatal(err)
+		return err
+	}
+
+	set.SetMetric("status", s.statusCode, metric.GAUGE)
+	set.SetMetric("latency", s.latencyMs, metric.DELTA)
+
+	if s.statusCode >= 500 {
+		// Add Event
+		e.AddEvent(event.New(s.error, "error"))
+	}
+
+	return nil
+}
+
+func queryServer(endpoint string) serverStatus {
+	status := 200
+	version := "1.0.0"
+	errorMsg := ""
+	latency := 150
+
+	return serverStatus{
+		statusCode: status,
+		apiVersion: version,
+		latencyMs: latency,
+		error: errorMsg,
+	}
+}
+
+func panicOnErr(err error) {
+	if err != nil {
+		panic(err)
 	}
 }
