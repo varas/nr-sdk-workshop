@@ -23,8 +23,8 @@ const (
 
 var (
 	args argumentList
-	//endpointA = "http://localhost:8081"
-	//endpointB = "http://localhost:8082"
+	//endpointA = "http://localhost:8081/health"
+	//endpointB = "http://localhost:8082/health"
 	endpointA = "http://www.mocky.io/v2/5aec67303200006700fa48fb"
 	endpointB = "http://www.mocky.io/v2/5aec674b3200004a00fa48fc"
 )
