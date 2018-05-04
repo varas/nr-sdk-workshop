@@ -23,8 +23,8 @@ const (
 
 var (
 	args argumentList
-	endpointA = "http://192.168.100.200:8081/health"
-	endpointB = "http://192.168.100.200:8082/health"
+	endpointA = "http://192.168.100.200:8080/health"
+	endpointB = "http://192.168.100.200:8081/health"
 	//endpointA = "http://www.mocky.io/v2/5aec67303200006700fa48fb"
 	//endpointB = "http://www.mocky.io/v2/5aec674b3200004a00fa48fc"
 )
@@ -50,11 +50,11 @@ func main() {
 	// Fetch data (populate entities)
 	err = monitorizeWebServer(a, endpointA)
 	if err != nil {
-		i.Logger().Errorf("cannot fetch data for endpoint: %s", endpointA)
+		i.Logger().Errorf("cannot fetch data for endpoint: %s, error: %s", endpointA, err)
 	}
 	err = monitorizeWebServer(b, endpointB)
 	if err != nil {
-		i.Logger().Errorf("cannot fetch data for endpoint: %s", endpointB)
+		i.Logger().Errorf("cannot fetch data for endpoint: %s, error: %s", endpointB, err)
 	}
 
 	// Push to New Relic
