@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	args argumentList
+	args      argumentList
 	endpointA = "http://192.168.100.200:8080/health"
 	endpointB = "http://192.168.100.200:8081/health"
 	//endpointA = "http://www.mocky.io/v2/5aec67303200006700fa48fb"
